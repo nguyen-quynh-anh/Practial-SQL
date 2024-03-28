@@ -25,3 +25,6 @@ elect distinct author_id as id from Views where author_id=viewer_id order by aut
 ---EX 13
 SELECT part, assembly_step FROM parts_assembly WHERE finish_date IS NULL;
 ---EX 14
+select * from lyft_drivers where yearly_salary<=30000 or yearly_salary>70000;
+---EX 15
+select advertising_channel, money_spent from uber_advertising where money_spent>100000;
