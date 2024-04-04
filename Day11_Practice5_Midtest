@@ -1,0 +1,137 @@
+---Ex1
+select b.CONTINENT, floor(avg(a.POPULATION))
+from CITY as a
+inner join COUNTRY as b
+on a.COUNTRYCODE=b.CODE
+group by b.CONTINENT
+---Ex2
+select round(sum(CASE
+when b.signup_action='Confirmed' then 1 else 0 END)/
+cast(count(distinct a.email_id) as decimal),2) as confirm_rate
+from emails as a
+left join texts as b 
+on a.email_id=b.email_id;
+---EX3
+select t1.age_bucket, 
+round(100.0*sum(CASE
+when t2.activity_type='send' then t2.time_spent else 0 end)
+/sum(CASE
+when t2.activity_type='send' 
+or t2.activity_type='open' then t2.time_spent else 0 end),2) 
+as send_prc,
+round(100.0*sum(case 
+when t2.activity_type='open' then t2.time_spent else 0 end)
+/sum(CASE
+when t2.activity_type='send' 
+or t2.activity_type='open' then t2.time_spent else 0 end),2) 
+as open_prc 
+from age_breakdown as t1
+inner join activities as t2
+on t1.user_id=t2.user_id
+group by t1.age_bucket
+---Ex4
+SELECT
+t1.customer_id
+from customer_contracts as t1
+left join products as t2
+on t1.product_id=t2.product_id
+group by t1.customer_id
+having count(distinct t2.product_category)
+=(select count(distinct product_category) from products)
+---Ex5
+select e.employee_id, e.name, 
+count(r.reports_to) as reports_count,
+round(avg(r.age),0) as average_age
+from Employees as e
+join Employees as r
+on e.employee_id=r.reports_to
+group by e.employee_id, e.name
+order by e.employee_id
+---Ex6
+select p.product_name,
+sum(o.unit) as unit
+from Products as p
+left join Orders as o
+on p.product_id=o.product_id
+where order_date between '2020-02-01' and '2020-02-29'
+group by p.product_name
+having sum(o.unit)>=100
+---Ex7
+select a.page_id
+from pages as a
+left join page_likes as b 
+on a.page_id=b.page_id
+where b.liked_date is null 
+order by a.page_id
+------MID COURSE TEST
+---Ex1
+select distinct replacement_cost
+from film
+order by replacement_cost
+---Ex2
+select 
+case
+	when replacement_cost between 9.99 and 19.99 then 'low'
+	when replacement_cost between 20 and 24.99 then 'medium'
+	else 'high' 
+	end as film_category,
+count(*)
+from film
+group by film_category
+---Ex3
+select t1.title, t1.length, t3.name as category_name
+from film as t1
+join film_category as t2
+on t1.film_id=t2.film_id
+join category as t3
+on t2.category_id=t3.category_id
+where t3.name='Drama' or t3.name='Sports'
+order by length desc;
+---Ex4
+select t3.name as category_name, count(t1.title)
+from film as t1
+join film_category as t2
+on t1.film_id=t2.film_id
+join category as t3
+on t2.category_id=t3.category_id
+group by t3.name
+order by count(t1.title) desc
+---Ex5
+select t1.last_name, t1.first_name, count(t2.film_id)
+from actor as t1
+left join film_actor as t2
+on t1.actor_id=t2.actor_id
+group by t1.actor_id
+order by count(t2.film_id) desc;
+---Ex6
+select count(t2.address)
+from customer as t1
+left join address as t2
+on t1.address_id=t2.address_id
+where t1.customer_id is null
+---Ex7
+select t1.city, sum(t4.amount)
+from city as t1
+join address as t2 
+on t1.city_id=t2.city_id
+join customer as t3
+on t2.address_id=t3.address_id
+join payment as t4
+on t3.customer_id=t4.customer_id
+group by t1.city
+order by sum(t4.amount) desc
+---Ex8
+select concat((t1.city),', ',(t2.country)) as city_country,
+sum(t5.amount)
+from city as t1
+join country as t2
+on t1.country_id=t2.country_id
+join address as t3
+on t1.city_id=t3.city_id
+join customer as t4
+on t3.address_id=t4.address_id
+join payment as t5
+on t4.customer_id=t5.customer_id
+group by city_country
+order by sum(t5.amount) desc
+
