@@ -1,0 +1,107 @@
+---Ex1
+SELECT count(distinct company_id) as duplicate_companies
+FROM (select company_id,title,description,count(job_id) as job_count 
+from job_listings
+group by company_id,title,description) as job_duplicate
+where job_count>1
+----Ex2
+with cte1 as
+(select category, product, sum(spend) as total_spend
+from product_spend
+where extract(year from transaction_date)=2022
+group by category, product),
+cte2 as 
+(select *, RANK() OVER(PARTITION BY category order by total_spend desc) 
+as rank_spend from cte1)
+SELECT category, product, total_spend FROM cte2
+where rank_spend<=2
+----Ex3
+with cte AS
+(select policy_holder_id,
+count(distinct case_id) as call_count
+from callers
+group by policy_holder_id)
+select count(distinct policy_holder_id) as member_count
+from cte 
+where call_count>=3
+----Ex4
+select page_id FROM pages
+where page_id not IN
+(select page_id from page_likes
+where page_id is not null)
+----Ex5
+with cte1 as
+(select distinct user_id
+from user_actions
+where extract(month from event_date) = 7
+and extract(year from event_date) = 2022
+intersect
+select distinct user_id
+from user_actions 
+where extract(month from event_date) = 6
+and extract(year from event_date) = 2022)
+select '7' as month, count(user_id) as monthly_active_users
+from cte1
+----Ex6
+select Date_format(trans_date, '%Y-%m') as month,
+country, count(id) as trans_count, 
+sum(case
+when state='approved' then 1
+else 0 end) as approved_count, 
+sum(amount) as trans_total_amount,
+sum(case
+when state='approved' then amount else 0 end) as approved_total_amount
+from Transactions
+group by Date_format(trans_date, '%Y-%m'), country 
+---Ex7
+select product_id, year as first_year, quantity, price
+from Sales 
+where (product_id, year) in 
+(select product_id, min(year) as year from Sales group by product_id)
+group by product_id
+---Ex8
+select customer_id from Customer
+group by customer_id
+having count(distinct product_key) =
+(select count(distinct product_key) from Product)
+---Ex 9
+select employee_id from Employees
+where salary<300000 and manager_id not in
+(select distinct employee_id from Employees)
+order by employee_id
+---Ex10
+select count(distinct company_id) as duplicate_companies
+from (select company_id,title,description,count(job_id) as job_count 
+from job_listings
+group by company_id,title,description) as job_duplicate
+where job_count>1
+----Ex11
+select user_name as results from
+(
+select a.name as user_name, 
+count(b.rating) as counts from MovieRating AS b
+join Users as a
+on a.user_id = b.user_id
+group by b.user_id
+order by counts DESC, user_name asc LIMIT 1
+) first_query
+union
+select movie_name as results from
+(
+select c.title as movie_name, AVG(d.rating) as rate from MovieRating as d
+join Movies as c
+on c.movie_id = d.movie_id
+where extract(month from created_at)=02 and 
+    extract(year from created_at)=2020
+group by d.movie_id
+order by rate desc, movie_name asc limit 1
+) second_query
+----Ex12
+select id,num from
+(select id,
+count(id) as num from 
+(select requester_id as id from RequestAccepted
+union all
+select accepter_id as id from RequestAccepted) first
+group by id) second
+order by num desc limit 1
