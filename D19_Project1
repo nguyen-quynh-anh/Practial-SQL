@@ -1,0 +1,84 @@
+-------EX1
+ select * from sales_dataset_rfm_prj;
+ alter table sales_dataset_rfm_prj
+alter column ordernumber type integer using ordernumber ::integer;
+  alter table sales_dataset_rfm_prj
+alter column quantityordered type smallint using quantityordered ::smallint;
+alter table sales_dataset_rfm_prj
+alter column priceeach type numeric using priceeach ::numeric;
+alter table sales_dataset_rfm_prj
+alter column orderlinenumber type smallint using orderlinenumber ::smallint;
+alter table sales_dataset_rfm_prj
+alter column sales type numeric using sales ::numeric;
+alter table sales_dataset_rfm_prj
+alter column orderdate type timestamp using orderdate ::timestamp;
+alter table sales_dataset_rfm_prj
+alter column productline type varchar using productline ::varchar;
+alter table sales_dataset_rfm_prj
+alter column msrp type smallint using msrp ::smallint;
+alter table sales_dataset_rfm_prj
+alter column customername type text using customername ::text;
+alter table sales_dataset_rfm_prj
+alter column phone type numeric using phone ::numeric;
+alter table sales_dataset_rfm_prj
+alter column addressline1 type text using addressline1 ::text;
+alter table sales_dataset_rfm_prj
+alter column addressline2 type text using addressline2 ::text;
+alter table sales_dataset_rfm_prj
+alter column city type text using city ::text;
+alter table sales_dataset_rfm_prj
+alter column state type text using state ::text;
+alter table sales_dataset_rfm_prj
+alter column postalcode type text using postalcode ::text;
+alter table sales_dataset_rfm_prj
+alter column country type text using country ::text;
+alter table sales_dataset_rfm_prj
+alter column contactfullname type text using contactfullname ::text;
+-----EX2
+select * from sales_dataset_rfm_prj
+where ordernumber is null
+or quantityordered is null
+or priceeach is null
+or orderlinenumber is null
+or sales is null
+or orderdate is null
+-----EX3
+alter table sales_dataset_rfm_prj
+add contactfirstname varchar,
+add contactlastname varchar;
+
+update sales_dataset_rfm_prj
+set contactfirstname=cast(substring(contactfullname,1,position('-' in contactfullname)-1) as varchar);
+update sales_dataset_rfm_prj
+set contactlastname=cast(substring(contactfullname,(position('-' in contactfullname)+1)) as varchar);
+update sales_dataset_rfm_prj
+set contactfirstname=upper(left(contactfirstname,1))||lower(substring(contactfirstname,2,length(contactfirstname)));
+update sales_dataset_rfm_prj
+set contactlastname=upper(left(contactlastname,1))||lower(substring(contactlastname,2,length(contactlastname)));
+--------EX4
+alter table sales_dataset_rfm_prj
+add QTR_ID INT,
+add MONTH_ID INT,
+ADD YEAR_ID INT;
+update sales_dataset_rfm_prj
+set QTR_ID=extract(quarter from orderdate);
+update sales_dataset_rfm_prj
+set MONTH_ID=extract(MONTH from orderdate);
+update sales_dataset_rfm_prj
+set YEAR_ID=extract(YEAR from orderdate);
+---------EX5
+with min_max as (
+SELECT Q1-1.5*IQR AS MIN_VALUE,
+Q3+1.5*IQR AS MAX_VALUE
+FROM (select
+	 percentile_cont(0.25) within group (order by quantityordered) as Q1,
+	  percentile_cont(0.75) within group (order by quantityordered) as Q3,
+	  percentile_cont(0.25) within group (order by quantityordered) - percentile_cont(0.75) within group (order by quantityordered) as IQR
+	  from sales_dataset_rfm_prj) as a)
+	  select * from sales_dataset_rfm_prj
+	  where quantityordered<(select MIN_VALUE FROM min_max) 
+	  or quantityordered>(select MAX_VALUE FROM min_max)
+---------EX6
+create table SALES_DATASET_RFM_PRJ_CLEAN
+as select * from sales_dataset_rfm_prj
+
